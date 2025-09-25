@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilgrims Decoder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f8f8; /* Light grey/off-white */
+            color: #333333; /* Dark grey for text */
+        }
+        .container {
+            max-width: 95%;
+            margin: auto;
+            padding: 1.5rem;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        .label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #555555;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 2px solid #e0e0e0;
+            background-color: #f9f9f9;
+            font-size: 1rem;
+            transition: all 0.2s ease-in-out;
+            box-sizing: border-box;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #aaaaaa;
+            box-shadow: 0 0 0 3px rgba(170, 170, 170, 0.2);
+        }
+        .btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            background-color: #222222;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn:hover {
+            background-color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .result-box {
+            background-color: #f0f0f0;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 1px solid #dcdcdc;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #dcdcdc;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            font-weight: 600;
+            color: #333333;
+        }
+        .result-value {
+            color: #555555;
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container bg-white rounded-3xl shadow-xl max-w-lg mx-auto p-8">
+        <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">Pilgrims Decoder</h1>
+
+        <div class="input-group">
+            <label for="code-input" class="label text-gray-700">Enter a 17-character code</label>
+            <input type="text" id="code-input" placeholder="e.g., GHKL0407530006008" class="input-field">
+        </div>
+
+        <button id="decode-btn" class="btn">Decode Code</button>
+
+        <div id="results" class="result-box hidden">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Decoded Details</h2>
+            <div id="results-content"></div>
+        </div>
+
+        <div id="error-message" class="hidden mt-4 bg-red-100 text-red-700 p-4 rounded-lg border border-red-200">
+            <p id="error-text"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // Define the data tables as JavaScript objects
+        const metal_data = {
+            '00': 'No metal', '01': 'Pancha Dhatu', '02': 'Silver',
+            '03': '925 silver', '04': 'Gold', '05': 'Gold plate'
+        };
+
+        const colour_data = {
+            '00': 'Clear', '01': 'White', '02': 'Yellow', '03': 'Orange',
+            '04': 'Red', '05': 'Pink', '06': 'Purple', '07': 'Blue',
+            '08': 'Green', '09': 'Brown', '10': 'Grey', '11': 'Black'
+        };
+
+        const stone_data = {
+            '00': 'No Stone', '01': 'Spinel', '02': 'Tanzanite', '03': 'Sapphire',
+            '04': 'Ruby', '05': 'Black opal', '06': 'Blue Topaz', '07': 'Sunstone',
+            '08': 'Kunzite', '09': 'Labadorite', '10': 'Sugilite', '11': 'Pearl',
+            '12': 'Malachite', '13': 'Larvikite', '14': 'Diaspore', '15': 'Rhodolite',
+            '16': 'Prehnite', '17': 'Onyx', '18': 'Bark Rubite', '19': 'Ruby Zoisite',
+            '20': 'Amethyst', '21': 'Coral', '22': 'Azurite', '23': 'Citrine',
+            '24': 'Zircon', '25': 'Morganite', '26': 'T-Savorite', '27': 'Tourmaline',
+            '28': 'Aquamarine', '29': 'Chaulite', '30': 'Smoky Quartz', '31': 'Bumble Bee',
+            '32': 'Ametrine', '33': 'Flowrite', '34': 'Zeosite', '35': 'Topaz',
+            '36': 'Rubellite', '37': 'Hessonite', '38': 'Emerald', '39': 'Moonstone',
+            '40': 'Maldavite', '41': 'Rhodonite', '42': 'Lemon Quartz', '43': 'Amber',
+            '44': 'Gold Rutile', '45': 'Apatite', '46': 'Tiger eye', '47': 'Unakite',
+            '48': 'Lolita', '49': 'Rose Quartz', '50': 'Carnelian', '51': 'Honey Quartz',
+            '52': 'Chrome', '53': 'Diamond', '54': 'Opal', '55': 'Lapis',
+            '56': 'Proustite', '57': 'Peridot', '58': 'Turquoise', '59': 'Agate',
+            '60': 'Howlite', '61': 'Sodalite', '62': 'Sphene', '63': 'Indigo Gabbro'
+        };
+
+        const clarity_data = {
+            '00': 'Eye Clean', '01': 'Slight inclusion', '02': 'Moderate inclusion',
+            '03': 'Heavy inclusion', '04': 'Opaque'
+        };
+
+        const cut_data = {
+            '01': 'Pear', '02': 'Oval', '03': 'Cushion', '04': 'Asscher',
+            '05': 'Marquise', '06': 'Radiant', '07': 'Emerald', '08': 'Round'
+        };
+
+        const price_codes = {
+            'G': 1, 'H': 2, 'I': 3, 'J': 4, 'K': 5,
+            'L': 6, 'M': 7, 'N': 8, 'O': 9, 'P': 0
+        };
+
+        function decodeJewelryCode(code) {
+            // Validate the code length
+            if (code.length !== 17) {
+                return {
+                    success: false,
+                    message: "Error: The code must be exactly 17 characters long."
+                };
+            }
+
+            // Split the code into components
+            const price_code = code.substring(0, 4);
+            const metal_code = code.substring(4, 6);
+            const colour_code = code.substring(6, 8);
+            const stone_code = code.substring(8, 10);
+            const clarity_code = code.substring(10, 12);
+            const carat_code = code.substring(12, 15);
+            const cut_code = code.substring(15, 17);
+
+            // Decode each part
+            const price = (() => {
+                try {
+                    const thousands = price_codes[price_code[0]];
+                    const hundreds = price_codes[price_code[1]];
+                    const tens = price_codes[price_code[2]];
+                    const ones = price_codes[price_code[3]];
+                    if ([thousands, hundreds, tens, ones].some(val => val === undefined)) {
+                        return "Unknown Price";
+                    }
+                    return (thousands * 1000 + hundreds * 100 + tens * 10 + ones).toLocaleString('en-US');
+                } catch (e) {
+                    return "Unknown Price";
+                }
+            })();
+
+            const metal = metal_data[metal_code] || "Unknown Metal";
+            const colour = colour_data[colour_code] || "Unknown Colour";
+            const stone = stone_data[stone_code] || "Unknown Stone";
+            const clarity = clarity_data[clarity_code] || "Unknown Clarity";
+            const cut = cut_data[cut_code] || "Unknown Cut";
+
+            const carat = (() => {
+                try {
+                    const caratVal = parseFloat(carat_code);
+                    if (!isNaN(caratVal)) {
+                        return caratVal.toFixed(2) + " carats";
+                    }
+                    return "Unknown Carat";
+                } catch (e) {
+                    return "Unknown Carat";
+                }
+            })();
+
+            return {
+                success: true,
+                details: {
+                    Price: price,
+                    Metal: metal,
+                    Colour: colour,
+                    Stone: stone,
+                    Clarity: clarity,
+                    Carat: carat,
+                    Cut: cut
+                }
+            };
+        }
+
+        document.getElementById('decode-btn').addEventListener('click', () => {
+            const codeInput = document.getElementById('code-input');
+            const resultsDiv = document.getElementById('results');
+            const resultsContentDiv = document.getElementById('results-content');
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+
+            const code = codeInput.value.trim();
+            const decodedResult = decodeJewelryCode(code);
+
+            // Hide previous results and errors
+            resultsDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            resultsContentDiv.innerHTML = '';
+
+            if (decodedResult.success) {
+                // Display results
+                for (const [label, value] of Object.entries(decodedResult.details)) {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `
+                        <span class="result-label">${label}</span>
+                        <span class="result-value">${value}</span>
+                    `;
+                    resultsContentDiv.appendChild(item);
+                }
+                resultsDiv.classList.remove('hidden');
+            } else {
+                // Display error message
+                errorText.textContent = decodedResult.message;
+                errorDiv.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
+
